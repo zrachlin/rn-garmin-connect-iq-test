@@ -7,7 +7,7 @@
 	<key>CFBundleDevelopmentRegion</key>
 	<string>en</string>
 	<key>CFBundleDisplayName</key>
-	<string>ConnectIqMobileSdkExample</string>
+	<string>ing_rn</string>
 	<key>CFBundleExecutable</key>
 	<string>$(EXECUTABLE_NAME)</string>
 	<key>CFBundleIdentifier</key>
@@ -28,10 +28,10 @@
 			<key>CFBundleTypeRole</key>
 			<string>Editor</string>
 			<key>CFBundleURLName</key>
-			<string>org.reactjs.native.example.ConnectIqMobileSdkExample</string>
+			<string>org.reactjs.native.example.ing_rn</string>
 			<key>CFBundleURLSchemes</key>
 			<array>
-				<string>ciqsdkexample-12345</string>
+				<string>ing-app-12345</string>
 			</array>
 		</dict>
 	</array>
