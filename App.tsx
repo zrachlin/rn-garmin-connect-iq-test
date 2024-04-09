@@ -1,120 +1,264 @@
-/**
- * Sample React Native App
- * https://github.com/facebook/react-native
- *
- * Generated with the TypeScript template
- * https://github.com/react-native-community/react-native-template-typescript
- *
- * @format
- */
-
-import React, {type PropsWithChildren} from 'react';
+import React, {useState, useEffect} from 'react';
+import {StyleSheet, Text, Button, TextInput, ScrollView} from 'react-native';
 import {
-  SafeAreaView,
-  ScrollView,
-  StatusBar,
-  StyleSheet,
-  Text,
-  useColorScheme,
-  View,
-} from 'react-native';
+  init,
+  getConnectedDevices,
+  getKnownDevices,
+  setDevice,
+  sendMessage,
+  getApplicationInfo,
+  type CIQAppInfo,
+  type CIQDevice,
+  addMessageRecievedListener,
+  type CIQMessage,
+  addDeviceStatusChangedListener,
+  type CIQDeviceStatusChangedEvent,
+  openStore,
+  registerForAppMessages,
+} from 'react-native-connect-iq-mobile-sdk';
 
-import {
-  Colors,
-  DebugInstructions,
-  Header,
-  LearnMoreLinks,
-  ReloadInstructions,
-} from 'react-native/Libraries/NewAppScreen';
+const APP_ID = 'a3421fee-d289-106a-538c-b9547ab12095';
+const STORE_ID = 'a3421fee-d289-106a-538c-b9547ab12095';
+const URL_SCHEME = 'ciqsdkexample-12345';
 
-const Section: React.FC<
-  PropsWithChildren<{
-    title: string;
-  }>
-> = ({children, title}) => {
-  const isDarkMode = useColorScheme() === 'dark';
-  return (
-    <View style={styles.sectionContainer}>
-      <Text
-        style={[
-          styles.sectionTitle,
-          {
-            color: isDarkMode ? Colors.white : Colors.black,
-          },
-        ]}>
-        {title}
-      </Text>
-      <Text
-        style={[
-          styles.sectionDescription,
-          {
-            color: isDarkMode ? Colors.light : Colors.dark,
-          },
-        ]}>
-        {children}
-      </Text>
-    </View>
-  );
+const isJson = (str: string) => {
+  try {
+    JSON.parse(str);
+  } catch (e) {
+    return false;
+  }
+  return true;
 };
 
-const App = () => {
-  const isDarkMode = useColorScheme() === 'dark';
+export default function App() {
+  const [initResult, setInitResult] = useState<string | undefined>();
+  const [getConnectedDevicesResult, setGetConnectedDevicesResult] = useState<
+    string | undefined
+  >();
+  const [getKnownDevicesResult, setGetKnownDevicesResult] = useState<
+    string | undefined
+  >();
+  const [sendMessageResult, setSendMessageResult] = useState<
+    string | undefined
+  >();
+  const [setDeviceResult, setSetDeviceResult] = useState<string | undefined>();
+  const [getApplicationInfoResult, setGetApplicationInfoResult] = useState<
+    string | undefined
+  >();
+  const [registerForAppMessagesResult, setRegisterForAppMessagesResult] =
+    useState<string | undefined>();
+  const [openStoreResult, setOpenStoreResult] = useState<string | undefined>();
+  const [devices, setDevices] = useState<CIQDevice[]>([]);
+  const [currentDevice, setCurrentDevice] = useState<CIQDevice | undefined>(
+    undefined,
+  );
+  const [storeId, setStoreId] = useState<string>('');
+  const [message, setMessage] = useState<string>('');
+  const [receivedMessage, setReceivedMessage] = useState<string>('');
+  const [deviceStatus, setDeviceStatus] = useState<string>('');
 
-  const backgroundStyle = {
-    backgroundColor: isDarkMode ? Colors.darker : Colors.lighter,
+  const callInit = () => {
+    setInitResult('');
+    init({
+      storeId: STORE_ID,
+      urlScheme: URL_SCHEME,
+    })
+      .then(() => {
+        setInitResult('initialized');
+      })
+      .catch(e => {
+        setInitResult(`failed: ${e}`);
+      });
   };
 
+  const callGetConnectedDevices = () => {
+    setGetConnectedDevicesResult('');
+    getConnectedDevices()
+      .then((connectedDevices: CIQDevice[]) => {
+        setGetConnectedDevicesResult(
+          `got connected devices: ${JSON.stringify(connectedDevices)}`,
+        );
+        setDevices(connectedDevices);
+      })
+      .catch((e: any) => {
+        setGetConnectedDevicesResult(`failed: ${e}`);
+      });
+  };
+
+  const callGetKnownDevices = () => {
+    setGetKnownDevicesResult('');
+    getKnownDevices()
+      .then((knownDevices: CIQDevice[]) => {
+        setGetKnownDevicesResult(
+          `got known devices: ${JSON.stringify(knownDevices)}`,
+        );
+        setDevices(knownDevices);
+      })
+      .catch((e: any) => {
+        setGetKnownDevicesResult(`failed: ${e}`);
+      });
+  };
+
+  const callGetApplicationInfo = () => {
+    setGetApplicationInfoResult('');
+    getApplicationInfo(APP_ID)
+      .then((applicationInfo: CIQAppInfo) => {
+        setGetApplicationInfoResult(
+          `got app info: ${JSON.stringify(applicationInfo)}`,
+        );
+      })
+      .catch((e: any) => {
+        setGetApplicationInfoResult(`failed: ${e}`);
+      });
+  };
+
+  const callOpenStore = () => {
+    setOpenStoreResult('');
+    openStore(APP_ID)
+      .then(() => {
+        setOpenStoreResult('open store succeeded');
+      })
+      .catch((e: any) => {
+        setOpenStoreResult(`failed: ${e}`);
+      });
+  };
+
+  const callRegisterForAppMessages = () => {
+    setRegisterForAppMessagesResult('');
+    registerForAppMessages(APP_ID)
+      .then(() => {
+        setRegisterForAppMessagesResult('register for app messages succeeded');
+      })
+      .catch((e: any) => {
+        setRegisterForAppMessagesResult(`failed: ${e}`);
+      });
+  };
+
+  const callSetDevice = (device: CIQDevice) => {
+    setCurrentDevice(device);
+    setSetDeviceResult('');
+    setDevice(device)
+      .then(() => {
+        setSetDeviceResult(`set device succeeded`);
+      })
+      .catch((e: any) => {
+        setSetDeviceResult(`failed: ${e}`);
+      });
+  };
+
+  const populateJsonMessage = () => {
+    setMessage(
+      // eslint-disable-next-line prettier/prettier
+      JSON.stringify({string_field: 'hello world', number_field: 1234}),
+    );
+  };
+  const callSendMessage = () => {
+    setSendMessageResult('');
+    const messageObj = isJson(message) ? JSON.parse(message) : message;
+    sendMessage(messageObj, APP_ID)
+      .then(status => {
+        setSendMessageResult(`send message succeeded ${status}`);
+        setMessage('');
+      })
+      .catch((e: any) => {
+        setSendMessageResult(`failed: ${e}`);
+      });
+  };
+
+  useEffect(() => {
+    callInit();
+    addMessageRecievedListener((messageEvent: CIQMessage) => {
+      setReceivedMessage(JSON.stringify(messageEvent));
+    });
+    addDeviceStatusChangedListener(
+      (changedDeviceStatus: CIQDeviceStatusChangedEvent) => {
+        setDeviceStatus(JSON.stringify(changedDeviceStatus));
+      },
+    );
+  }, []);
+
   return (
-    <SafeAreaView style={backgroundStyle}>
-      <StatusBar
-        barStyle={isDarkMode ? 'light-content' : 'dark-content'}
-        backgroundColor={backgroundStyle.backgroundColor}
+    <ScrollView contentContainerStyle={styles.container}>
+      <Button title="Call Init" onPress={callInit} />
+      {initResult ? <Text>Result: {initResult}</Text> : null}
+      <Button
+        title="Call Get Connected Devices"
+        onPress={callGetConnectedDevices}
       />
-      <ScrollView
-        contentInsetAdjustmentBehavior="automatic"
-        style={backgroundStyle}>
-        <Header />
-        <View
-          style={{
-            backgroundColor: isDarkMode ? Colors.black : Colors.white,
-          }}>
-          <Section title="Step One">
-            Edit <Text style={styles.highlight}>App.tsx</Text> to change this
-            screen and then come back to see your edits.
-          </Section>
-          <Section title="See Your Changes">
-            <ReloadInstructions />
-          </Section>
-          <Section title="Debug">
-            <DebugInstructions />
-          </Section>
-          <Section title="Learn More">
-            Read the docs to discover what to do next:
-          </Section>
-          <LearnMoreLinks />
-        </View>
-      </ScrollView>
-    </SafeAreaView>
+      {getConnectedDevicesResult ? (
+        <Text>Result: {getConnectedDevicesResult}</Text>
+      ) : null}
+      <Button title="Call Get Known Devices" onPress={callGetKnownDevices} />
+      {getKnownDevicesResult ? (
+        <Text>Result: {getKnownDevicesResult}</Text>
+      ) : null}
+      <Text>Devices:</Text>
+      {devices.map((device: CIQDevice) => (
+        <Button
+          key={device.deviceIdentifier}
+          title={`Use ${device.friendlyName}(${device.deviceIdentifier})`}
+          onPress={() => {
+            callSetDevice(device);
+          }}
+        />
+      ))}
+      {setDeviceResult ? <Text>Result: {setDeviceResult}</Text> : null}
+      <Button
+        title="Call Get Application Info"
+        disabled={!currentDevice}
+        onPress={callGetApplicationInfo}
+      />
+      {getApplicationInfoResult ? (
+        <Text>Result: {getApplicationInfoResult}</Text>
+      ) : null}
+      <Button
+        title="Register Message Events"
+        disabled={!currentDevice}
+        onPress={callRegisterForAppMessages}
+      />
+      {registerForAppMessagesResult ? (
+        <Text>Result: {registerForAppMessagesResult}</Text>
+      ) : null}
+      <Text>Message</Text>
+      <TextInput
+        style={styles.textInput}
+        value={message}
+        onChangeText={setMessage}
+      />
+      <Button title="Use JSON message" onPress={populateJsonMessage} />
+      <Button title="Send Message" onPress={callSendMessage} />
+      {sendMessageResult ? <Text>Result: {sendMessageResult}</Text> : null}
+      <Text>Message Received:</Text>
+      <Text>{receivedMessage}</Text>
+      <Text>Device Status:</Text>
+      <Text>{deviceStatus}</Text>
+      <Text>Store Id</Text>
+      <TextInput
+        style={styles.textInput}
+        value={storeId}
+        onChangeText={setStoreId}
+      />
+      <Button title="Open Store" onPress={callOpenStore} />
+      {openStoreResult ? <Text>Result: {openStoreResult}</Text> : null}
+    </ScrollView>
   );
-};
+}
 
 const styles = StyleSheet.create({
-  sectionContainer: {
-    marginTop: 32,
-    paddingHorizontal: 24,
+  container: {
+    backgroundColor: 'white',
+    flex: 1,
+    alignItems: 'center',
+    justifyContent: 'center',
   },
-  sectionTitle: {
-    fontSize: 24,
-    fontWeight: '600',
+  box: {
+    width: 60,
+    height: 60,
+    marginVertical: 20,
   },
-  sectionDescription: {
-    marginTop: 8,
-    fontSize: 18,
-    fontWeight: '400',
-  },
-  highlight: {
-    fontWeight: '700',
+  textInput: {
+    borderWidth: 1,
+    borderColor: 'black',
+    width: 300,
   },
 });
-
-export default App;
