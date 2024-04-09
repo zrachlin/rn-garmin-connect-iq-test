@@ -16,7 +16,7 @@ target 'ing_rn' do
     # Upcoming versions of React Native may rely on get_default_flags(), but
     # we make it explicit here to aid in the React Native upgrade process.
     :hermes_enabled => true,
-    :fabric_enabled => flags[:fabric_enabled],
+    :fabric_enabled => true,
     # Enables Flipper.
     #
     # Note that if you have use_frameworks! enabled, Flipper will not work and
@@ -31,13 +31,22 @@ target 'ing_rn' do
     # Pods for testing
   end
 
-  post_install do |installer|
-    react_native_post_install(
-      installer,
-      # Set `mac_catalyst_enabled` to `true` in order to apply patches
-      # necessary for Mac Catalyst builds
-      :mac_catalyst_enabled => false
-    )
-    __apply_Xcode_12_5_M1_post_install_workaround(installer)
+  def handle_targets_config(installer)
+    installer.pods_project.targets.each do |target|
+      target.build_configurations.each do |config|
+          config.build_settings['IPHONEOS_DEPLOYMENT_TARGET'] = '12.0'
+      end
+    end
   end
+
+  post_install do |installer|
+    react_native_post_install(installer)
+    handle_targets_config(installer)
+    # We need to make one crude patch to RCT-Folly - set `__IPHONE_10_0` to our iOS target + 1
+    # ==> hack to modify the header file
+    `sed -e $'s/__IPHONE_10_0/__IPHONE_13_0/' \
+        Pods/Headers/Private/RCT-Folly/folly/portability/Time.h > temp_file \
+        && mv temp_file Pods/Headers/Private/RCT-Folly/folly/portability/Time.h`
+  end
+
 end

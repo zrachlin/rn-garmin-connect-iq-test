@@ -3,8 +3,11 @@
 #import <React/RCTBridge.h>
 #import <React/RCTBundleURLProvider.h>
 #import <React/RCTRootView.h>
+#import <React/RCTBridge+Private.h>
 
-#import <React/RCTAppSetupUtils.h>
+#import <RCTAppSetupUtils.h>
+
+#import "ConnectIqMobileSdk.h"
 
 #if RCT_NEW_ARCH_ENABLED
 #import <React/CoreModulesPlugins.h>
@@ -15,6 +18,8 @@
 #import <ReactCommon/RCTTurboModuleManager.h>
 
 #import <react/config/ReactNativeConfig.h>
+
+
 
 static NSString *const kRNConcurrentRoot = @"concurrentRoot";
 
@@ -31,7 +36,7 @@ static NSString *const kRNConcurrentRoot = @"concurrentRoot";
 
 - (BOOL)application:(UIApplication *)application didFinishLaunchingWithOptions:(NSDictionary *)launchOptions
 {
-  RCTAppSetupPrepareApp(application);
+  RCTAppSetupPrepareApp(application, true);
 
   RCTBridge *bridge = [[RCTBridge alloc] initWithDelegate:self launchOptions:launchOptions];
 
@@ -44,7 +49,7 @@ static NSString *const kRNConcurrentRoot = @"concurrentRoot";
 #endif
 
   NSDictionary *initProps = [self prepareInitialProps];
-  UIView *rootView = RCTAppSetupDefaultRootView(bridge, @"ing_rn", initProps);
+  UIView *rootView = RCTAppSetupDefaultRootView(bridge, @"ing_rn", initProps, true);
 
   if (@available(iOS 13.0, *)) {
     rootView.backgroundColor = [UIColor systemBackgroundColor];
@@ -59,6 +64,8 @@ static NSString *const kRNConcurrentRoot = @"concurrentRoot";
   [self.window makeKeyAndVisible];
   return YES;
 }
+
+
 
 /// This method controls whether the `concurrentRoot`feature of React18 is turned on or off.
 ///
@@ -89,6 +96,17 @@ static NSString *const kRNConcurrentRoot = @"concurrentRoot";
 #else
   return [[NSBundle mainBundle] URLForResource:@"main" withExtension:@"jsbundle"];
 #endif
+}
+
+- (BOOL)application:(UIApplication *)application openURL:(NSURL *)url options:(nonnull NSDictionary<UIApplicationOpenURLOptionsKey,id> *)options {
+    NSString* sourceApp = options[UIApplicationOpenURLOptionsSourceApplicationKey];
+    NSLog(@"Received URL from '%@': %@", sourceApp, url);
+
+   RCTBridge *bridge = [RCTBridge currentBridge];
+
+   ConnectIqMobileSdk * connectIqMobileSdk = [bridge moduleForName:@"ConnectIqMobileSdk"];
+
+   return [connectIqMobileSdk handleOpenURL:url sourceApplication:sourceApp];
 }
 
 #if RCT_NEW_ARCH_ENABLED

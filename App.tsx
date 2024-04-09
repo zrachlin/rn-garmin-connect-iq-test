@@ -19,7 +19,7 @@ import {
 
 const APP_ID = 'a3421fee-d289-106a-538c-b9547ab12095';
 const STORE_ID = 'a3421fee-d289-106a-538c-b9547ab12095';
-const URL_SCHEME = 'ing-app-12345';
+const URL_SCHEME = 'ing-rn-12345';
 
 const isJson = (str: string) => {
   try {
